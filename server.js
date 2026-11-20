@@ -12,7 +12,7 @@ http.createServer(async(req,res)=>{
  try{
   const h={'user-agent':UA};if(req.headers.range)h.range=req.headers.range;
   const r=await fetch(tu.href,{headers:h,redirect:'follow',signal:ctl.signal});
-  const out={};r.headers.forEach((v,k)=>{if(!drop.has(k))out[k]=v});
+  const out={};r.headers.forEach((v,k)=>{if(!drop.has(k)&&!k.startsWith('access-control-'))out[k]=v});
   const ct=(r.headers.get('content-type')||'').toLowerCase();
   const enc=r.headers.get('content-encoding');
   if(enc)delete out['content-length'];
