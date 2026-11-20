@@ -11,12 +11,15 @@ http.createServer(async(req,res)=>{
  const ctl=new AbortController();res.on('close',()=>ctl.abort());
  try{
   const h={'user-agent':UA};if(req.headers.range)h.range=req.headers.range;
-  const r=await fetch(tu.href,{headers:h,redirect:'follow',signal:ctl.signal});
+  let r,cur=tu.href,trace=[];
+  for(let i=0;i<6;i++){r=await fetch(cur,{headers:h,redirect:'manual',signal:ctl.signal});trace.push(r.status+'@'+new URL(cur).host);
+   if(r.status>=300&&r.status<400&&r.headers.get('location')){cur=new URL(r.headers.get('location'),cur).href;continue}break}
+  Object.defineProperty(r,'url',{value:cur});
   const out={};r.headers.forEach((v,k)=>{if(!drop.has(k)&&!k.startsWith('access-control-'))out[k]=v});
   const ct=(r.headers.get('content-type')||'').toLowerCase();
   const enc=r.headers.get('content-encoding');
   if(enc)delete out['content-length'];
-  Object.assign(out,cors);
+  Object.assign(out,cors);out['x-trace']=trace.join('>');
   if(tu.href.includes('.m3u8')||ct.includes('mpegurl')){
    const origin='https://'+req.headers.host;
    const wrap=u=>origin+'/?url='+encodeURIComponent(new URL(u,r.url||tu.href).href);
